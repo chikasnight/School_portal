@@ -10,22 +10,43 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    //add image tp the trgister table
     public function register(Request $request) {
       
         $request->validate([
             'name'=>['required'],
             'phone'=>['required'],
             'email'=>['required', 'unique:users,email'],
-            'password'=>['required', 'min:6', 'confirmed']
+            'password'=>['required', 'min:6', 'confirmed'],
+            'image' => ['mimes:png,jpeg,gif,bmp', 'max:2048','required'],
+            
 
         ]);
+        
+        //get the image
+        $image = $request->file('image');
+        //$image_path = $image->getPathName();
+ 
+        // get original file name and replace any spaces with _
+        // example: ofiice card.png = timestamp()_office_card.pnp
+        $filename = time()."_".preg_replace('/\s+/', '_', strtolower($image->getClientOriginalName()));
+ 
+        // move image to temp location (tmp disk)
+        $tmp = $image->storeAs('uploads/original', $filename, 'tmp');
+ 
         //create user
         $user = User::create([
             'name' => $request-> name,
             'phone' => $request-> phone,
             'email'=> $request-> email,
-            'password' => Hash::make($request->password)
+            'password' => Hash::make($request->password),
+            'image'=> $filename,
+            'disk'=> config('site.upload_disk'),
+           
         ]);
+        
+        //dispacth job to handle image manipulation
+        $this->dispatch(new UploadImage($newGrocery));
 
 
         //create token
@@ -88,19 +109,19 @@ class UserController extends Controller
 
     public function changePassword(Request $request){
         $request->validate([
-            'current_password'=>['required', new CheckCurrentPassword()],
-            'new_password'=>['required',/*new CompareNewPasswordWithOld()*/ 'confirmed']
+            'current_password'=>['required', new CheckPassword()],
+            'new_password'=>['required','confirmed']
         ]);
 
         $user= auth('sanctum')->user();
-        if( Hash::check($request->new_password, $user->password)){
+        /*if( Hash::check($request->new_password, $user->password)){
             return response()->json([
                 'success'=> false,
                 'message'=>'password matches with current password',
                 
             ]);
 
-        }
+        }*/
 
         $user ->update(['password'=> Hash::make($request->new_password)]);
 
@@ -120,7 +141,7 @@ class UserController extends Controller
         ]);
     } 
     public function search(Request $request){
-        $task =new Grocery();
+        $task =new User();
         $query =$task-> newQuery();
 
         if($request->has('name')){
@@ -128,13 +149,6 @@ class UserController extends Controller
         
         }
 
-        if($request->has('price')){
-            $query= $query->where('price', $request->price);
-        }
-        if($request->has('category')){
-            $query= $query->where('category', $request->category);
-        }
-        
 
         
         return response()->json([
@@ -146,28 +160,30 @@ class UserController extends Controller
         ]);
         
     }
-    public function getAllUser(Request $request, $groceryId){
-        $grocery = Grocery::find($groceryId);
-        if(!$grocery) {
+    public function getAllUser(Request $request, $userId){
+        $user = User::find($userId);
+        if(!$user) {
             return response() ->json([
                 'success' => false,
-                'message' => 'grocery not found'
+                'message' => 'user not found'
             ]);
         }
 
         return response() ->json([
             'success'=> true,
-            'message'  => 'grocery found',
+            'message'  => 'user found',
             'data'   => [
-                'grocery'=> new GroceryResource($grocery),
+                'user'=> new UserResource($user),
                 
             ]
         ]);
     }
     public function updateProfile(Request $request){
         $request->validate([
-        'current_name'=>['required', /*new CheckPassword()],*/ ],
-            'new_name'=>['required',/*new CheckIfNewPassMatchWithOld(),*/ 'confirmed']
+            'current_name'=>['required'],
+            'new_name'=>['required','confirmed'],
+            'new_image' => ['mimes:png,jpeg,gif,bmp', 'max:2048','required']
+            
         ]);
 
         $user= auth('sanctum')->user();
@@ -179,8 +195,9 @@ class UserController extends Controller
             ]);
 
         }
-
+        
         $user ->update(['name'=> Hash::make($request->new_name)]);
+        $user ->update(['image'=> Hash::make($request->new_image)]);
 
         
         //dwlete any other existing token for user
@@ -193,7 +210,7 @@ class UserController extends Controller
         
         return response()->json([
             'success'=> true,
-            'message'=>'name updated',
+            'message'=>'profile updated',
             'data' =>['token'=> $token]
         ]);
     } 

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Record;
+use App\Http\Resources\RecordResource;
+
 
 class RecordController extends Controller
 {
@@ -10,7 +13,7 @@ class RecordController extends Controller
         //validate request body
         $request->validate([
             'student_name'=>['required'],
-            'teaccher_name'=>['required'],
+            'teacher_name'=>['required'],
             'subject'=>['required'],
             'ca'=>['required'],
             'exams'=>['required'],
@@ -20,7 +23,7 @@ class RecordController extends Controller
         $Record = Record::create([
             'user_id'=>auth()->id(),
             'student_name'=> $request->student_name,
-            'teaccher_name'=> $request->teaccher_name,
+            'teacher_name'=> $request->teaccher_name,
             'subject'=> $request->subject,
             'ca,'=> $request->ca,
             'exams,'=> $request->exams,
@@ -64,4 +67,22 @@ class RecordController extends Controller
             'message' => 'record updated'
         ]);
     } 
+    public function getRecord(Request $request, $recordId){
+        $record = Record::find($recordId);
+        if(!$record) {
+            return response() ->json([
+                'success' => false,
+                'message' => 'record not found'
+            ]);
+        }
+
+        return response() ->json([
+            'success'=> true,
+            'message'  => 'record found',
+            'data'   => [
+                'record'=> new RecordResource($record),
+                
+            ]
+        ]);
+    }
 }

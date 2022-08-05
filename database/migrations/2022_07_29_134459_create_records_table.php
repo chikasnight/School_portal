@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('student_name');
-            $table->string('teaccher_name');
+            $table->string('teacher_name');
             $table->string('subject');
             $table->string('ca');
             $table->string('exams');

@@ -19,8 +19,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'phone',
         'email',
         'password',
+        'upload_successful',
+        'disk',
     ];
 
     /**
@@ -41,4 +44,20 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function record(){
+        return $this->hasMany(Record::class);
+    }
+    public function notice(){
+        return $this->hasMany(Notice::class);
+    }
+    public function assignments(){
+        return $this->hasMany(Assignment::class);
+    }
+    public function message(){
+        return $this->hasMany(Message::class);
+    }
+    public function submit_assignments(){
+        return $this->hasMany(SubmitAssignment::class);
+    }
 }
+

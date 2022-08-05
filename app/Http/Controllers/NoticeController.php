@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Notice;
+use App\Http\Resources\NoticeResource;
+
 
 class NoticeController extends Controller
 {
