@@ -56,6 +56,9 @@ class User extends Authenticatable
     public function message(){
         return $this->hasMany(Message::class);
     }
+    public function uploadImage(){
+        return $this->hasMany(ImageUpload::class);
+    }
     public function submit_assignments(){
         return $this->hasMany(SubmitAssignment::class);
     }

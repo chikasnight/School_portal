@@ -32,7 +32,7 @@ class AssignmentController extends Controller
         return response()->json([
             'success'=> true,
             'message'=>'successfully created an assignment',
-            'data' => new CommentResource($assignment),
+            'data' => new AssignmentResource($assignment),
         ]);
     }
     public function getAssignment(Request $request, $assignmentId){

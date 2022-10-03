@@ -15,15 +15,15 @@ class UserController extends Controller
       
         $request->validate([
             'name'=>['required'],
-            'phone'=>['required'],
+            'phone'=>['required', 'min:11'],
             'email'=>['required', 'unique:users,email'],
             'password'=>['required', 'min:6', 'confirmed'],
-            'image' => ['mimes:png,jpeg,gif,bmp', 'max:2048','required'],
+            //'image' => ['mimes:png,jpeg,gif,bmp', 'max:2048','required'],
             
 
         ]);
         
-        //get the image
+        /*//get the image
         $image = $request->file('image');
         //$image_path = $image->getPathName();
  
@@ -32,7 +32,7 @@ class UserController extends Controller
         $filename = time()."_".preg_replace('/\s+/', '_', strtolower($image->getClientOriginalName()));
  
         // move image to temp location (tmp disk)
-        $tmp = $image->storeAs('uploads/original', $filename, 'tmp');
+        $tmp = $image->storeAs('uploads/original', $filename, 'tmp');*/
  
         //create user
         $user = User::create([
@@ -40,13 +40,13 @@ class UserController extends Controller
             'phone' => $request-> phone,
             'email'=> $request-> email,
             'password' => Hash::make($request->password),
-            'image'=> $filename,
-            'disk'=> config('site.upload_disk'),
+            //'image'=> $filename,
+            //'disk'=> config('site.upload_disk'),
            
         ]);
         
         //dispacth job to handle image manipulation
-        $this->dispatch(new UploadImage($newGrocery));
+        /*$this->dispatch(new UploadImage($image));*/
 
 
         //create token

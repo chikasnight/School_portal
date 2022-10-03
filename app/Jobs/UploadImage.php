@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\User;
+use App\Models\ImageUpload;
 use Exception;
 use Illuminate\Support\Facades\File;
 use Illuminate\Bus\Queueable;
@@ -19,11 +19,11 @@ class UploadImage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $user;
+    protected $imageUpload;
 
-    public function __construct(User $user)
+    public function __construct(ImageUpload $imageUpload)
     {
-        $this->user = $user;
+        $this->imageUpload = $imageUpload;
     }
 
     /**
@@ -33,9 +33,9 @@ class UploadImage implements ShouldQueue
      */
     public function handle()
     {
-        $disk = $this->properties->disk;
+        $disk = $this->imageUpload->disk;
         //Log::info("Disk: " . $disk);
-        $imageName = $this->properties->image;
+        $imageName = $this->imageUpload->image;
         $original_file = storage_path() . '/uploads/original/' . $imageName;
 
         try {
@@ -53,22 +53,22 @@ class UploadImage implements ShouldQueue
             // store images to permanent disk
 
             // Original
-            if (Storage::disk($disk)->put('/uploads/properties/original/' . $imageName, fopen($original_file, 'r+'))) {
+            if (Storage::disk($disk)->put('/uploads/images/original/' . $imageName, fopen($original_file, 'r+'))) {
                 File::delete($original_file);
             }
 
             // Large
-            if (Storage::disk($disk)->put('/uploads/properties/large/' . $imageName, fopen($large, 'r+'))) {
+            if (Storage::disk($disk)->put('/uploads/images/large/' . $imageName, fopen($large, 'r+'))) {
                 File::delete($large);
             }
 
             // Thumbnail
-            if (Storage::disk($disk)->put('/uploads/properties/thumbnail/' . $imageName, fopen($thumbnail, 'r+'))) {
+            if (Storage::disk($disk)->put('/uploads/images/thumbnail/' . $imageName, fopen($thumbnail, 'r+'))) {
                 File::delete($thumbnail);
             }
 
             // update database record with success flag
-            $this->properties->update([
+            $this->imageUpload->update([
                 'upload_successful' => true
             ]);
         } catch (Exception $e) {
